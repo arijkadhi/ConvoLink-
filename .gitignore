@@ -55,3 +55,18 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Deployment & Backups
+backups/
+*.sql
+*.dump
+
+# SSL Certificates
+nginx/ssl/
+*.pem
+*.key
+*.crt
+
+# Docker volumes
+postgres_data/
+postgres_data_prod/
