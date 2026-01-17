@@ -1,0 +1,55 @@
+# Docker Compose Configuration
+# Maps to: Deployment - Containerization (Docker)
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: messaging-db
+    environment:
+      POSTGRES_USER: messaging_user
+      POSTGRES_PASSWORD: messaging_password
+      POSTGRES_DB: messaging_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U messaging_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  # FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: messaging-api
+    environment:
+      DATABASE_URL: postgresql://messaging_user:messaging_password@db:5432/messaging_db
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      DEBUG: ${DEBUG:-False}
+      ENVIRONMENT: production
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+    networks:
+      - messaging-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  messaging-network:
+    driver: bridge
